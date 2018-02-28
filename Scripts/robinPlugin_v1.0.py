@@ -28,12 +28,13 @@ hopAmplitude = cmds.intFieldGrp( numberOfFields=1, label='Hop Height')
 
 #Create animate button
 cmds.separator(h=10, style = 'double')
-cmds.button( label='Animate Robin', c = "createRobinAnimation()", h = 50)
+cmds.button( label='Move Robin', c = "createRobinMoveDirectionAnimation()", h = 50)
+cmds.button( label='Flap Wings', c = "createFlapWingsAnimation()", h = 50)
    
 cmds.showWindow(robinWindow)
 
 
-def createRobinAnimation():
+def createRobinMoveDirectionAnimation():
     robinCtrl = cmds.select( 'RobinCTRL', r=True )
     frames = cmds.intFieldGrp(animationFrames, q = True, v = True)
     steps = cmds.intFieldGrp(hopFrames, q = True, v = True)
@@ -62,6 +63,27 @@ def createRobinAnimation():
             cmds.setAttr('RobinCTRL.translateZ', currentZ)
             cmds.setKeyframe( 'RobinCTRL', attribute='translateZ', t=i+j )    
     
+
+def createFlapWingsAnimation():
+    robinCtrl = cmds.select( 'RobinCTRL', r=True )
+    frames = cmds.intFieldGrp(animationFrames, q = True, v = True)
+    steps = cmds.intFieldGrp(hopFrames, q = True, v = True)
+    amplitude = cmds.intFieldGrp(hopAmplitude, q = True, v = True)
+    pi=math.pi
+    
+    for i in range(0, frames[0], steps[0]):
+        for j in range(0, steps[0], 1):
+            radius = steps[0]/2.0
+            teta = j*pi/steps[0]
+            rightWingRotation = radius * amplitude[0] * math.sin(teta) 
+            leftWingRotation = -radius * amplitude[0] * math.sin(teta)
+        
+            cmds.setAttr('RobinCTRL.LiftRightWing', rightWingRotation)
+            cmds.setKeyframe( 'RobinCTRL', attribute='LiftRightWing', t=i+j )
+            cmds.setAttr('RobinCTRL.LiftLeftWing', leftWingRotation)
+            cmds.setKeyframe( 'RobinCTRL', attribute='LiftLeftWing', t=i+j )
+    
+
     
 #Reset robin's position and delete key frames
 maxFrame = cmds.playbackOptions( max = True, query = True )
