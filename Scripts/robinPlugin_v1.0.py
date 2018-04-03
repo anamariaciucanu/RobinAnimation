@@ -26,16 +26,23 @@ hopFrames = cmds.intFieldGrp( numberOfFields=1, label='Hop Frames')
 cmds.separator(h=10, style = 'double')
 cmds.text('How high should the robin hop?');
 hopAmplitude = cmds.intFieldGrp( numberOfFields=1, label='Hop Height')
+cmds.separator(h=10, style = 'double')
+cmds.text('How fast should the robin hop?');
+hopSpeed = cmds.intFieldGrp( numberOfFields=1, label='Hop Speed')
 
 #Get parameters from fields and defaults
-pi=math.pi
+pi = math.pi
 start = 0
 end = 120
 steps = 5
 amplitude = 5
+speed = 1
+
+mirrorShakeHead = True
 fieldEndGrabbed = False
 fieldStepsGrabbed = False
 fieldAmplitudeGrabbed = False
+fieldSpeedGrabbed = False
 
 #Create animate button
 cmds.separator(h=10, style = 'double')
@@ -76,13 +83,24 @@ def getFieldAmplitude():
     localAmplitude = cmds.intFieldGrp(hopAmplitude, q = True, v = True)
     global amplitude
     amplitude = localAmplitude[0]
-    
+         
 def getAmplitude():
     global fieldAmplitudeGrabbed
     if not fieldAmplitudeGrabbed:
         getFieldAmplitude()
         fieldAmplitudeGrabbed = True
-
+        
+def getFieldSpeed():
+    localSpeed = cmds.intFieldGrp(hopSpeed, q = True, v = True)
+    global speed
+    speed = localSpeed[0]
+    
+def getSpeed():
+    global fieldSpeedGrabbed
+    if not fieldSpeedGrabbed:
+        getFieldSpeed()
+        fieldSpeedGrabbed = True
+        
 def createAnimationSequence():
     animationTypes = random.sample(xrange(5), 5)
     animationTimes = random.sample(xrange(50), 5)
@@ -109,14 +127,14 @@ def createRobinMoveDirectionAnimation():
     robinCtrl = cmds.select( 'RobinCTRL', r=True )
     getEnd()
     getSteps()
-    getFieldAmplitude()    
+    getFieldAmplitude()   
+    getSpeed() 
     
     for i in range(start, end, steps):
         for j in range(0, steps, 1):
-            radius = steps/2.0
             teta = j*pi/steps
-            newY = radius * amplitude * math.fabs(math.sin(teta)) 
-            newX = radius * math.fabs(math.cos(teta)) 
+            newY = amplitude * math.fabs(math.sin(teta)) 
+            newX = speed * math.fabs(math.cos(teta)) 
             newZ = 0              
       
             oldX = cmds.getAttr('RobinCTRL.translateX') 
@@ -142,10 +160,9 @@ def createFlapWingsAnimation():
     
     for i in range(start, end, steps):
         for j in range(0, steps, 1):
-            radius = steps/2.0
             teta = j*pi/steps
-            rightWingRotation = radius * amplitude * math.sin(teta) 
-            leftWingRotation = -radius * amplitude * math.sin(teta)
+            rightWingRotation = amplitude * math.sin(teta) 
+            leftWingRotation = -amplitude * math.sin(teta)
         
             cmds.setAttr('RobinCTRL.LiftRightWing', rightWingRotation)
             cmds.setKeyframe( 'RobinCTRL', attribute='LiftRightWing', t=i+j )
@@ -157,21 +174,22 @@ def createShakeHeadAnimation():
     robinCtrl = cmds.select('RobinCTRL', r=True)
     getEnd()
     getSteps()
-    getFieldAmplitude()   
-    
+    getFieldAmplitude()       
+    flip = 1
+            
     for i in range(start, end, steps):
-        for j in range(0, steps, 1):
-            radius = steps/2.0
-            teta = j*pi/steps
-            print teta
-            headRotation = radius * amplitude * math.sin(teta) 
+        if mirrorShakeHead:
+            flip = -flip    
         
+        for j in range(0, steps, 1):
+            teta = j*pi/steps            
+            headRotation = flip * amplitude * math.sin(teta) 
+                    
             if headRotation > 90.0:
                 headRotation = 90.0
             cmds.setAttr('RobinCTRL.ShakeHead', headRotation)
             cmds.setKeyframe('RobinCTRL', attribute='ShakeHead', t=i+j )
-
-    
+           
     
 #Reset robin's position and delete key frames
 maxFrame = cmds.playbackOptions( max = True, query = True )
