@@ -2,104 +2,146 @@ import maya.cmds as cmds
 import math
 import random  
 
-#If window exists, delete window
-if cmds.window("robinWindow", exists = True):
-    cmds.deleteUI("robinWindow")
-    
-#Create window and imge logo
-robinWindow = cmds.window("robinWindow", t="Robin Animator", w = 400, h = 300, sizeable = False)
-cmds.columnLayout(adj = True)
-logoPath = cmds.internalVar(upd = True) + "icons/robinAnimator.png"
-cmds.image(w = 400, h = 100, image = logoPath)
+#To fix: When pressing on Hop and othr buttons twice,
+# the Robin movement starts at different points
 
-#Create reset button for robin
-cmds.separator(h=10, style = 'double')
-cmds.button( label='Reset Robin', c = "resetRobin()", h = 50)
-
-#Ask user how many animation frames he wants
-cmds.separator(h=10, style = 'double')
-cmds.text('How many frames would you like the nimation to have?');
-animationFrames = cmds.intFieldGrp( numberOfFields=1, label='Animation Frames')
-cmds.separator(h=10, style = 'double')
-cmds.text('How many frames would you like per hop?');
-hopFrames = cmds.intFieldGrp( numberOfFields=1, label='Hop Frames')
-cmds.separator(h=10, style = 'double')
-cmds.text('How high should the robin hop?');
-hopAmplitude = cmds.intFieldGrp( numberOfFields=1, label='Hop Height')
-cmds.separator(h=10, style = 'double')
-cmds.text('How fast should the robin hop?');
-hopSpeed = cmds.intFieldGrp( numberOfFields=1, label='Hop Speed')
-
+#Global parameters
 #Get parameters from fields and defaults
-pi = math.pi
-start = 0
-end = 120
-steps = 5
-amplitude = 5
-speed = 1
-
+widgets = {}
 mirrorShakeHead = True
-fieldEndGrabbed = False
-fieldStepsGrabbed = False
-fieldAmplitudeGrabbed = False
-fieldSpeedGrabbed = False
 
-#Create animate button
-cmds.separator(h=10, style = 'double')
-cmds.button( label='Move Robin', c = "createRobinMoveDirectionAnimation()", h = 50)
-cmds.button( label='Flap Wings', c = "createFlapWingsAnimation()", h = 50)
-cmds.button( label = 'Shake Head', c = "createShakeHeadAnimation()", h = 50)
-cmds.button( label='Create Sequence', c = "createAnimationSequence()", h = 50)
+pi = math.pi
+animationStart = 0
+animationEnd = 120
+hopFrames = 5
+hopHeight = 5
+hopSpeed = 1
+flapWingsFrames = 5
+flapWingsHeight = 5
+flapWingsSpeed = 1
+shakeHeadFrames = 5
+shakeHeadHeight = 5
+shakeHeadSpeed = 1
 
-#Show button   
-cmds.showWindow(robinWindow)
 
-#def getStart():
-#    return start
-    
-def getFieldEnd():
-    localEnd = cmds.intFieldGrp(animationFrames, q = True, v = True)
-    global end
-    end = localEnd[0]
-
-def getEnd():
-    global fieldEndGrabbed
-    if not fieldEndGrabbed:
-        getFieldEnd() 
-        fieldEndGrabbed = True   
-    
-def getFieldSteps():
-    localSteps = cmds.intFieldGrp(hopFrames, q = True, v = True)
-    global steps
-    steps = localSteps[0]
-
-def getSteps():
-    global fieldStepsGrabbed
-    if not fieldStepsGrabbed:
-        getFieldSteps() 
-        fieldStepsGrabbed = True  
+def createUI():    
+    #If window exists, delete window
+    if cmds.window('robinWindow', exists = True):
+        cmds.deleteUI('robinWindow')
         
-def getFieldAmplitude():
-    localAmplitude = cmds.intFieldGrp(hopAmplitude, q = True, v = True)
-    global amplitude
-    amplitude = localAmplitude[0]
-         
-def getAmplitude():
-    global fieldAmplitudeGrabbed
-    if not fieldAmplitudeGrabbed:
-        getFieldAmplitude()
-        fieldAmplitudeGrabbed = True
-        
-def getFieldSpeed():
-    localSpeed = cmds.intFieldGrp(hopSpeed, q = True, v = True)
-    global speed
-    speed = localSpeed[0]
+    #Create window
+    widgets['window'] = cmds.window('robinWindow', t='Robin Animator', w = 400, h = 500, sizeable = False, mxb = False, mnb = False)
+    windowLayout = cmds.columnLayout(adj = True)
+ 
+    #Create image logo
+    logoPath = cmds.internalVar(upd = True) + 'icons/robinAnimator.png'
+    logoImage = cmds.image(w = 400, h = 100, image = logoPath)
+
+    #Create reset button for robin
+    cmds.button( label='Reset Robin', c = 'resetRobin()', h = 50)
+    cmds.separator(h=10, style = 'double')
     
-def getSpeed():
-    global fieldSpeedGrabbed
-    if not fieldSpeedGrabbed:
-        getFieldSpeed()
-        fieldSpeedGrabbed = True
+    #Ask user how many animation frames he wants
+    cmds.text('How many frames would you like the animation to have?');
+    widgets['animationFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Animation Frames')
+        
+    #Create tabs
+    widgets['tabLayout'] = cmds.tabLayout(imw = 5, imh = 5)
+    
+    #Feet tab
+    widgets['feetTab'] = cmds.columnLayout('Feet', w = 400, parent = widgets['tabLayout'])        
+    cmds.separator(h=10, style = 'double')
+    cmds.text('How many frames per hop?');
+    widgets['hopFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Hop Frames')
+    cmds.separator(h=10, style = 'double')
+    cmds.text('How high should the robin hop?');
+    widgets['hopHeight'] = cmds.intFieldGrp( numberOfFields=1, label='Hop Height')
+    cmds.separator(h=10, style = 'double')
+    cmds.text('How fast should the robin hop?');
+    widgets['hopSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Hop Speed')      
+    
+    #Create move button
+    cmds.separator(h=10, style = 'double')
+    cmds.button( label='Hop', c = 'createRobinHopInADirectionAnimation()', w = 100)
+    
+    #Torso tab
+    widgets['torsoTab'] = cmds.columnLayout('Torso', w = 400, parent = widgets['tabLayout'])
+    
+    #Wings tab
+    widgets['wingsTab'] = cmds.columnLayout('Wings', w = 400, parent = widgets['tabLayout'])
+    cmds.separator(h=10, style = 'double')
+    cmds.text('How many frames per wing flap?');
+    widgets['flapWingsFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Frames')
+    cmds.separator(h=10, style = 'double')
+    cmds.text('How high should the wings go?');
+    widgets['flapWingsHeight'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Height')
+    cmds.separator(h=10, style = 'double')
+    cmds.text('How fast should the wings flap?');
+    widgets['flapWingsSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Speed') 
+
+    #Create move button
+    cmds.separator(h=10, style = 'double')    
+    cmds.button( label='Flap Wings', c = 'createFlapWingsAnimation()', w = 100)
+    
+    #Head tab
+    widgets['headTab'] = cmds.columnLayout('Head', w = 400, parent = widgets['tabLayout'])
+    cmds.button( label = 'Shake Head', c = 'createShakeHeadAnimation()', w = 100)
+    
+    #Tail tab
+    widgets['tailTab'] = cmds.columnLayout('Tail', w = 400, parent = widgets['tabLayout'])    
+    cmds.button( label = 'Wag Tail', c = 'createWagTailAnimation()', w = 100)
+    
+    #Animation sequence tab
+    widgets['sequenceTab'] = cmds.columnLayout('Sequence', w = 400, parent = widgets['tabLayout'])    
+    cmds.button( label='Create Sequence', c = 'createSequenceAnimation()', w = 100)
+
+    #Show button   
+    cmds.showWindow(widgets['window'])
+    
+def getAnimationEnd():
+    localAnimationEnd = cmds.intFieldGrp(widgets['animationFrames'], q = True, v = True)
+    if localAnimationEnd > 0:
+        global animationEnd
+        animationEnd = localAnimationEnd[0]
+
+#Hop methods    
+def getHopFrames():
+    localHopFrames = cmds.intFieldGrp(widgets['hopFrames'], q = True, v = True)
+    if localHopFrames > 0:
+        global hopFrames
+        hopFrames = localHopFrames[0]
+        
+def getHopHeight():
+    localHopHeight = cmds.intFieldGrp(widgets['hopHeight'], q = True, v = True)
+    if localHopHeight > 0:
+        global hopHeight
+        hopHeight = localHopHeight[0]
+                 
+def getHopSpeed():
+    localHopSpeed = cmds.intFieldGrp(widgets['hopSpeed'], q = True, v = True)
+    if localHopSpeed > 0:
+        global hopSpeed
+        hopSpeed = localHopSpeed[0]
+
+#Flap wings methods    
+def getFlapWingsFrames():
+    localFlapWingsFrames = cmds.intFieldGrp(widgets['flapWingsFrames'], q = True, v = True)
+    if localFlapWingsFrames > 0:
+        global flapWingsFrames
+        flapWingsFrames = localFlapWingsFrames[0]
+        
+def getFlapWingsHeight():
+    localFlapWingsHeight = cmds.intFieldGrp(widgets['flapWingsHeight'], q = True, v = True)
+    if localFlapWingsHeight > 0:
+        global flapWingsHeight
+        flapWingsHeight = localFlapWingsHeight[0]
+                 
+def getFlapWingsSpeed():
+    localFlapWingsSpeed = cmds.intFieldGrp(widgets['flapWingsSpeed'], q = True, v = True)
+    if localFlapWingsSpeed > 0:
+        global flapWingsSpeed
+        flapWingsSpeed = localFlapWingsSpeed[0]
+        flapWingsSpeed = flapWingsSpeed / 10.0
         
 def createAnimationSequence():
     animationTypes = random.sample(xrange(5), 5)
@@ -108,33 +150,32 @@ def createAnimationSequence():
     print animationTimes
     
     for a in range(0, 5):
-        global end
-        end = end + animationTimes[a]
+        global animationEnd
+        animationEnd = animationEnd + animationTimes[a]
         if animationTypes[a] <= 2:
             #hopping 
-            print "Here 1"
-            createRobinMoveDirectionAnimation()
+            print 'Here 1'
+            createRobinHopInADirectionAnimation()
         elif animationTypes[a] > 2:
             #flapping wings 
             createFlapWingsAnimation()
-            print "Here 2"
-        global start
-        start = end                
+            print 'Here 2'
+        global animationStart
+        animationStart = animationEnd               
+                            
             
-                
-            
-def createRobinMoveDirectionAnimation():
+def createRobinHopInADirectionAnimation():
     robinCtrl = cmds.select( 'RobinCTRL', r=True )
-    getEnd()
-    getSteps()
-    getFieldAmplitude()   
-    getSpeed() 
+    getAnimationEnd()
+    getHopFrames()
+    getHopHeight()   
+    getHopSpeed() 
     
-    for i in range(start, end, steps):
-        for j in range(0, steps, 1):
-            teta = j*pi/steps
-            newY = amplitude * math.fabs(math.sin(teta)) 
-            newX = speed * math.fabs(math.cos(teta)) 
+    for i in range(animationStart, animationEnd, hopFrames):
+        for j in range(0, hopFrames, 1):
+            teta = j*pi/hopFrames
+            newY = hopHeight * math.fabs(math.sin(teta)) 
+            newX = hopSpeed * math.fabs(math.cos(teta)) 
             newZ = 0              
       
             oldX = cmds.getAttr('RobinCTRL.translateX') 
@@ -154,15 +195,16 @@ def createRobinMoveDirectionAnimation():
 
 def createFlapWingsAnimation():
     robinCtrl = cmds.select( 'RobinCTRL', r=True )
-    getEnd()
-    getSteps()
-    getFieldAmplitude()   
+    getAnimationEnd()
+    getFlapWingsFrames()
+    getFlapWingsHeight()   
+    getFlapWingsSpeed()
     
-    for i in range(start, end, steps):
-        for j in range(0, steps, 1):
-            teta = j*pi/steps
-            rightWingRotation = amplitude * math.sin(teta) 
-            leftWingRotation = -amplitude * math.sin(teta)
+    for i in range(animationStart, animationEnd, flapWingsFrames):
+        for j in range(0, flapWingsFrames, 1):
+            teta = j*pi/flapWingsFrames
+            rightWingRotation = flapWingsHeight * math.sin(flapWingsSpeed * teta) 
+            leftWingRotation = -flapWingsHeight * math.sin(flapWingsSpeed * teta)
         
             cmds.setAttr('RobinCTRL.LiftRightWing', rightWingRotation)
             cmds.setKeyframe( 'RobinCTRL', attribute='LiftRightWing', t=i+j )
@@ -172,18 +214,18 @@ def createFlapWingsAnimation():
 
 def createShakeHeadAnimation():
     robinCtrl = cmds.select('RobinCTRL', r=True)
-    getEnd()
-    getSteps()
-    getFieldAmplitude()       
+    getAnimationEnd()
+    getShakeHeadFrames()
+    getShakeHeadHeight()       
     flip = 1
             
-    for i in range(start, end, steps):
+    for i in range(animationStart, animationEnd, shakeHeadFrames):
         if mirrorShakeHead:
             flip = -flip    
         
-        for j in range(0, steps, 1):
-            teta = j*pi/steps            
-            headRotation = flip * amplitude * math.sin(teta) 
+        for j in range(0, shakeHeadFrames, 1):
+            teta = j*pi/shakeHeadFrames            
+            headRotation = flip * shakeHeadHeight * math.sin(teta) 
                     
             if headRotation > 90.0:
                 headRotation = 90.0
@@ -191,10 +233,10 @@ def createShakeHeadAnimation():
             cmds.setKeyframe('RobinCTRL', attribute='ShakeHead', t=i+j )
            
     
-#Reset robin's position and delete key frames
-maxFrame = cmds.playbackOptions( max = True, query = True )
-
 def resetRobin():
+    #Reset robin's position and delete key frames
+    maxFrame = cmds.playbackOptions( max = True, query = True )
+
     #Reset transformations
     cmds.select( 'RobinCTRL', r=True )
     cmds.setAttr('RobinCTRL.translateX', 0)
@@ -213,17 +255,20 @@ def resetRobin():
     cmds.setAttr('RobinCTRL.LiftLeftWing', 0)
     
     #Delete key frames
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='translateX', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='translateY', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='translateZ', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='rotateX', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='rotateY', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='rotateZ', option="keys" )  
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='LiftTail', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='WagTail', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='NodHead', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='ShakeHead', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='WagHead', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='SwingLegs', option="keys" )    
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='LiftRightWing', option="keys" )
-    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='LiftLeftWing', option="keys" )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='translateX', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='translateY', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='translateZ', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='rotateX', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='rotateY', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='rotateZ', option='keys' )  
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='LiftTail', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='WagTail', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='NodHead', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='ShakeHead', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='WagHead', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='SwingLegs', option='keys' )    
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='LiftRightWing', option='keys' )
+    cmds.cutKey( 'RobinCTRL', time=(0,maxFrame), attribute='LiftLeftWing', option='keys' )
+    
+#Actual start of script
+createUI()
