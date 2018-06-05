@@ -6,6 +6,9 @@ import random
 # the Robin movement starts at different points
 #To do: Add clear buttons on each tab to remove effect
 
+#Setup 
+rowSpacingNumber = 10
+
 #Global parameters------------------------------------------------
 widgets = {}
 mirrorShakeHead = True
@@ -58,16 +61,15 @@ def createUI():
         cmds.deleteUI('robinWindow')
         
     #Create window 
-    widgets['window'] = cmds.window('robinWindow', t='Robin Animator', w = 400, h = 500, sizeable = False, mxb = False, mnb = False)
-    windowLayout = cmds.columnLayout(adj = True)
+    widgets['window'] = cmds.window('robinWindow', t='Robin Animator', w = 400, sizeable = False, mxb = False, mnb = False)
+    windowLayout = cmds.columnLayout(adj = True, rowSpacing = rowSpacingNumber)
  
     #Create image logo
     logoPath = cmds.internalVar(upd = True) + 'icons/robinAnimator.png'
-    logoImage = cmds.image(w = 400, h = 100, image = logoPath)
+    logoImage = cmds.image(image = logoPath)
 
     #Create reset button for robin
-    cmds.button( label='Reset Robin', c = 'resetRobin()', h = 50, w = 400)
-    cmds.separator(h=10, style = 'double')
+    cmds.button( label='Reset Robin', c = 'resetRobin()', h = 50)
     
     #Ask user how many animation frames he wants
     cmds.text('How many frames would you like the animation to have?');
@@ -77,103 +79,89 @@ def createUI():
     widgets['tabLayout'] = cmds.tabLayout(imw = 5, imh = 5)
     
     #Feet tab --------------------------------------------------------------------------------
-    widgets['feetTab'] = cmds.columnLayout('Feet', w = 400, parent = widgets['tabLayout'])        
-    cmds.separator(h=10, style = 'double')
+    widgets['feetTab'] = cmds.columnLayout('Feet', parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)    
     cmds.text('How many frames per hop?');
     widgets['hopFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Hop Frames')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How high should the robin hop?');
     widgets['hopAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Hop Amplitude')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How fast should the robin hop?');
     widgets['hopSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Hop Speed')   
-    cmds.separator(h=10, style = 'double')
-    cmds.button( label='Hop', c = 'createRobinHopInADirectionAnimation()', w = 100)
+    cmds.rowLayout( numberOfColumns = 2 )     
+    cmds.button( label='Hop', c = 'createRobinHopInADirectionAnimation()', w = 100, align = 'left')
+    cmds.button( label='Clear Hop', c = 'clearRobinHopInADirectionAnimation()', w = 100, align = 'right')
 
         
     #Torso tab --------------------------------------------------------------------------------
-    widgets['torsoTab'] = cmds.columnLayout('Torso', w = 400, parent = widgets['tabLayout'])
-    cmds.separator(h=10, style = 'double')
+    widgets['torsoTab'] = cmds.columnLayout('Torso', parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)
     cmds.text('How many frames per bending motion?');
     widgets['torsoBendFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Torso Bending Frames')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How much should the torso bend?');
     widgets['torsoBendAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Torso Bending Amplitude')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How fast should the torso bend?');
     widgets['torsoBendSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Torso Bending Speed') 
-    cmds.separator(h=10, style = 'double')    
-    cmds.button( label='Bend Torso', c = 'createBendTorsoAnimation()', w = 100)
+    cmds.rowLayout( numberOfColumns = 2 ) 
+    cmds.button( label='Bend Torso', c = 'createBendTorsoAnimation()', w = 100, align = 'left')
+    cmds.button( label='Clear Bend Torso', c = 'clearBendTorsoAnimation()', w = 100, align = 'right')
+    
     
     #Wings tab----------------------------------------------------------------------------------
-    widgets['wingsTab'] = cmds.columnLayout('Wings', w = 400, parent = widgets['tabLayout'])
-    cmds.separator(h=10, style = 'double')
+    widgets['wingsTab'] = cmds.columnLayout('Wings', parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)
     cmds.text('How many frames per wing flap?');
     widgets['flapWingsFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Frames')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How high should the wings go?');
     widgets['flapWingsAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Amplitude')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How fast should the wings flap?');
-    widgets['flapWingsSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Speed') 
-    cmds.separator(h=10, style = 'double')    
-    cmds.button( label='Flap Wings', c = 'createFlapWingsAnimation()', w = 100)
-    
+    widgets['flapWingsSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Speed')  
+    cmds.rowLayout( numberOfColumns = 2 ) 
+    cmds.button( label='Flap Wings', c = 'createFlapWingsAnimation()', w = 100, align = 'left')
+    cmds.button( label='Clear Flap Wings', c = 'clearFlapWingsAnimation()', w = 100, align = 'right') 
+       
     #Head tab----------------------------------------------------------------------------------
-    widgets['headTab'] = cmds.columnLayout('Head', w = 400, parent = widgets['tabLayout'])
-    cmds.separator(h=10, style = 'double')
+    widgets['headTab'] = cmds.columnLayout('Head', w = 400, parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)
     cmds.text('How many frames per head nod?');
     widgets['nodHeadFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Nod Head Frames')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How much should the head turn?');
     widgets['nodHeadAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Nod Head Amplitude')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How fast should the head nod?');
     widgets['nodHeadSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Nod Head Speed') 
-    cmds.separator(h=10, style = 'double') 
-    cmds.button( label = 'Nod Head', c = 'createNodHeadAnimation()', w = 100)
+    cmds.button( label = 'Nod Head', c = 'createNodHeadAnimation()', w = 100, align = 'left')
+    cmds.button( label = 'Clear Nod Head', c = 'clearNodHeadAnimation()', w = 100, align = 'right')
     
-    cmds.separator(h=10, style = 'double') 
     cmds.text('How many frames per head shake?');
     widgets['shakeHeadFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Shake Head Frames')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How much should the head turn?');
     widgets['shakeHeadAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Shake Head Amplitude')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How fast should the head shake?');
     widgets['shakeHeadSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Shake Head Speed') 
-    cmds.separator(h=10, style = 'double') 
-    cmds.button( label = 'Shake Head', c = 'createShakeHeadAnimation()', w = 100)
-    
+    cmds.button( label = 'Shake Head', c = 'createShakeHeadAnimation()', w = 100, align = 'left')
+    cmds.button( label = 'Clear Shake Head', c = 'clearShakeHeadAnimation()', w = 100, align = 'right')
+        
     #Tail tab-----------------------------------------------------------------------------------
-    widgets['tailTab'] = cmds.columnLayout('Tail', w = 400, parent = widgets['tabLayout'])   
-    cmds.separator(h=10, style = 'double')
+    widgets['tailTab'] = cmds.columnLayout('Tail', w = 400, parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)   
     cmds.text('How many frames per tail wag?');
     widgets['wagTailFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Wag Tail Frames')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How high should the tail go?');
     widgets['wagTailAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Wag Tail Amplitude')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How fast should the tail wag?');
-    widgets['wagTailSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Wag Tail Speed') 
-    cmds.separator(h=10, style = 'double')         
-    cmds.button( label = 'Wag Tail', c = 'createWagTailAnimation()', w = 100)
-    
-    cmds.separator(h=10, style = 'double')
+    widgets['wagTailSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Wag Tail Speed')      
+    cmds.button( label = 'Wag Tail', c = 'createWagTailAnimation()', w = 100, align = 'left')
+    cmds.button( label = 'Clear Wag Tail', c = 'clearWagTailAnimation()', w = 100, align = 'right')
+        
     cmds.text('How many frames per tail lift?');
     widgets['liftTailFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Lift Tail Frames')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How high should the tail go?');
     widgets['liftTailAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Lift Tail Amplitude')
-    cmds.separator(h=10, style = 'double')
     cmds.text('How fast should the tail lift?');
-    widgets['liftTailSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Lift Tail Speed') 
-    cmds.separator(h=10, style = 'double')         
-    cmds.button( label = 'Lift Tail', c = 'createLiftTailAnimation()', w = 100)
+    widgets['liftTailSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Lift Tail Speed')   
+    cmds.button( label = 'Lift Tail', c = 'createLiftTailAnimation()', w = 100, align = 'left')
+    cmds.button( label = 'Clear Lift Tail', c = 'clearLiftTailAnimation()', w = 100, align = 'right')    
     
     #Animation sequence tab------------------------------------------------------------------------
     widgets['sequenceTab'] = cmds.columnLayout('Sequence', w = 400, parent = widgets['tabLayout'])    
-    cmds.button( label='Create Sequence', c = 'createSequenceAnimation()', w = 100)
+    cmds.rowLayout( numberOfColumns = 2 )  
+    cmds.button( label='Create Sequence', c = 'createSequenceAnimation()', w = 100, align = 'left')
+    cmds.button( label='Clear Sequence', c = 'clearSequenceAnimation()', w = 100, align = 'right')
+    
 
     #Show button   
     cmds.showWindow(widgets['window'])
@@ -546,7 +534,38 @@ def createNodHeadAnimation():
 def getMaxFrame():
     maxFrame = cmds.playbackOptions( max = True, query = True )
     return maxFrame 
-    
+
+#Clearing
+def clearRobinHopInADirectionAnimation():
+    maxFrame = getMaxFrame()
+    resetRobinTranslation(maxFrame)
+ 
+def clearBendTorsoAnimation():
+    maxFrame = getMaxFrame()
+    resetBendTorso(maxFrame)
+    resetSwingLegs(maxFrame)
+
+def clearFlapWingsAnimation():
+    maxFrame = getMaxFrame()
+    resetLiftWings(maxFrame)  
+
+def clearNodHeadAnimation():
+    maxFrame = getMaxFrame()
+    resetNodHead(maxFrame) 
+
+def clearShakeHeadAnimation():
+    maxFrame = getMaxFrame()
+    resetShakeHead(maxFrame) 
+
+def clearWagTailAnimation():
+    maxFrame = getMaxFrame()
+    resetWagTail(maxFrame)
+
+def clearLiftTailAnimation():
+    maxFrame = getMaxFrame()
+    resetLiftTail(maxFrame)    
+              
+#Reseting       
 def resetRobinTranslation(maxFrame):
     #Reset transformations
     cmds.setAttr('RobinCTRL.translateX', 0)
