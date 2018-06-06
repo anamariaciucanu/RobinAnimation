@@ -72,8 +72,10 @@ def createUI():
     cmds.button( label='Reset Robin', c = 'resetRobin()', h = 50)
     
     #Ask user how many animation frames he wants
-    cmds.text('How many frames would you like the animation to have?');
-    widgets['animationFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Animation Frames')
+    cmds.text('What is the start frame?');
+    widgets['startFrame'] = cmds.intFieldGrp( numberOfFields=1, label='Animation Start Frame')
+    cmds.text('What is the end frame?')
+    widgets['endFrame'] = cmds.intFieldGrp( numberOfFields=1, label='Animation End Frame')
         
     #Create tabs 
     widgets['tabLayout'] = cmds.tabLayout(imw = 5, imh = 5)
@@ -170,15 +172,17 @@ def createUI():
 #Get variables ------------------------------------------------------------------------------------    
 #Get animation start position
 def getAnimationStart():
-    global animationStart
-    animationStart = 1
+    localAnimationStart = cmds.intFieldGrp(widgets['startFrame'], q = True, v = True)
+    if localAnimationStart > 0:
+        global animationStart
+        animationStart = localAnimationStart[0]
         
 #Get animation end position    
 def getAnimationEnd():
-    localAnimationEnd = cmds.intFieldGrp(widgets['animationFrames'], q = True, v = True)
+    localAnimationEnd = cmds.intFieldGrp(widgets['endFrame'], q = True, v = True)
     if localAnimationEnd > 0:
         global animationEnd
-        animationEnd = localAnimationEnd[0]
+        animationEnd = localAnimationEnd[0] + 1
 
 #Hop methods    
 def getHopFrames():
@@ -341,14 +345,9 @@ def createAnimationSequence():
 def createRobinHopInADirectionAnimation():
     #Select robin controler
     robinCtrl = cmds.select( 'RobinCTRL', r=True )
-    
-    #Find maximum frame
-    maxFrame = getMaxFrame()
-    
-    #Reset translation
-    resetRobinTranslation(maxFrame)
-    
-    #Get parameters    
+        
+    #Get parameters 
+    getAnimationStart()   
     getAnimationEnd()
     getHopFrames()
     getHopAmplitude()   
@@ -357,39 +356,36 @@ def createRobinHopInADirectionAnimation():
     #Animate the hop    
     for i in range(animationStart, animationEnd, hopFrames):
         for j in range(0, hopFrames, 1):
-            teta = j*pi/hopFrames
-            newY = hopAmplitude * math.fabs(math.sin(teta)) 
-            newX = hopSpeed * math.fabs(math.cos(teta)) 
-            newZ = 0              
-      
-            oldX = cmds.getAttr('RobinCTRL.translateX') 
-            oldY = cmds.getAttr('RobinCTRL.translateY') 
-            oldZ = cmds.getAttr('RobinCTRL.translateZ') 
-            
-            currentX = oldX - newX 
-            currentY = newY
-            currentZ = oldZ - newZ 
-            cmds.setAttr('RobinCTRL.translateX', currentX)
-            cmds.setKeyframe( 'RobinCTRL', attribute='translateX', t=i+j )
-            cmds.setAttr('RobinCTRL.translateY', currentY)
-            cmds.setKeyframe( 'RobinCTRL', attribute='translateY', t=i+j )
-            cmds.setAttr('RobinCTRL.translateZ', currentZ)
-            cmds.setKeyframe( 'RobinCTRL', attribute='translateZ', t=i+j )    
+            if (i+j < animationEnd):
+                teta = j*pi/hopFrames
+                newY = hopAmplitude * math.fabs(math.sin(teta)) 
+                newX = hopSpeed * math.fabs(math.cos(teta)) 
+                newZ = 0              
+          
+                oldX = cmds.getAttr('RobinCTRL.translateX') 
+                oldY = cmds.getAttr('RobinCTRL.translateY') 
+                oldZ = cmds.getAttr('RobinCTRL.translateZ') 
+                
+                currentX = oldX - newX 
+                currentY = newY
+                currentZ = oldZ - newZ 
+                cmds.setAttr('RobinCTRL.translateX', currentX)
+                cmds.setKeyframe( 'RobinCTRL', attribute='translateX', t=i+j )
+                cmds.setAttr('RobinCTRL.translateY', currentY)
+                cmds.setKeyframe( 'RobinCTRL', attribute='translateY', t=i+j )
+                cmds.setAttr('RobinCTRL.translateZ', currentZ)
+                cmds.setKeyframe( 'RobinCTRL', attribute='translateZ', t=i+j )   
+            else:
+                break 
   
 
 #Torso bending animation
 def createBendTorsoAnimation(): 
     #Select robin controller 
     robinCtrl = cmds.select( 'RobinCTRL', r=True )
-    
-    #Find maximum frame
-    maxFrame = getMaxFrame()
-    
-    #Reset torso bend and leg swings
-    resetBendTorso(maxFrame)
-    resetSwingLegs(maxFrame)
-    
+       
     #Get parameters
+    getAnimationStart()
     getAnimationEnd()
     getTorsoBendFrames()
     getTorsoBendAmplitude()   
@@ -402,25 +398,29 @@ def createBendTorsoAnimation():
             flip = -flip   
             
         for j in range(0, torsoBendFrames, 1):
-            teta = j*pi/torsoBendFrames
-            torsoRotation = flip * torsoBendAmplitude * math.sin(torsoBendSpeed * teta) 
-    
-            if torsoRotation < -30:
-                torsoRotation = -30
-            if torsoRotation > 60:
-                torsoRotation = 60
-                
-            feetReverseRotation = -torsoRotation
+            if (i+j < animationEnd):
+                teta = j*pi/torsoBendFrames
+                torsoRotation = flip * torsoBendAmplitude * math.sin(torsoBendSpeed * teta) 
         
-            cmds.setAttr('RobinCTRL.BendTorso', torsoRotation)
-            cmds.setKeyframe( 'RobinCTRL', attribute='BendTorso', t=i+j )
-            cmds.setAttr('RobinCTRL.SwingLegs', feetReverseRotation)
-            cmds.setKeyframe('RobinCTRL', attribute='SwingLegs', t=i+j )
+                if torsoRotation < -30:
+                    torsoRotation = -30
+                if torsoRotation > 60:
+                    torsoRotation = 60
+                    
+                feetReverseRotation = -torsoRotation
+            
+                cmds.setAttr('RobinCTRL.BendTorso', torsoRotation)
+                cmds.setKeyframe( 'RobinCTRL', attribute='BendTorso', t=i+j )
+                cmds.setAttr('RobinCTRL.SwingLegs', feetReverseRotation)
+                cmds.setKeyframe('RobinCTRL', attribute='SwingLegs', t=i+j )
+            else:
+                break
     
 
 #Wing flapping animation
 def createFlapWingsAnimation():
     robinCtrl = cmds.select( 'RobinCTRL', r=True )
+    getAnimationStart()
     getAnimationEnd()
     getFlapWingsFrames()
     getFlapWingsAmplitude()   
@@ -428,19 +428,22 @@ def createFlapWingsAnimation():
     
     for i in range(animationStart, animationEnd, flapWingsFrames):
         for j in range(0, flapWingsFrames, 1):
-            teta = j*pi/flapWingsFrames
-            rightWingRotation = flapWingsAmplitude * math.sin(flapWingsSpeed * teta) 
-            leftWingRotation = -flapWingsAmplitude * math.sin(flapWingsSpeed * teta)
-        
-            cmds.setAttr('RobinCTRL.LiftRightWing', rightWingRotation)
-            cmds.setKeyframe( 'RobinCTRL', attribute='LiftRightWing', t=i+j )
-            cmds.setAttr('RobinCTRL.LiftLeftWing', leftWingRotation)
-            cmds.setKeyframe('RobinCTRL', attribute='LiftLeftWing', t=i+j )
- 
+            if (i+j < animationEnd):
+                teta = j*pi/flapWingsFrames
+                rightWingRotation = flapWingsAmplitude * math.sin(flapWingsSpeed * teta) 
+                leftWingRotation = -flapWingsAmplitude * math.sin(flapWingsSpeed * teta)
+            
+                cmds.setAttr('RobinCTRL.LiftRightWing', rightWingRotation)
+                cmds.setKeyframe( 'RobinCTRL', attribute='LiftRightWing', t=i+j )
+                cmds.setAttr('RobinCTRL.LiftLeftWing', leftWingRotation)
+                cmds.setKeyframe('RobinCTRL', attribute='LiftLeftWing', t=i+j )
+            else:
+                break
 
 #Tail wagging animation    
 def createWagTailAnimation():
     robinCtrl = cmds.select('RobinCTRL', r=True)
+    getAnimationStart()
     getAnimationEnd()
     getWagTailFrames()
     getWagTailAmplitude() 
@@ -452,17 +455,21 @@ def createWagTailAnimation():
             flip = -flip    
         
         for j in range(0, wagTailFrames, 1):
-            teta = j*pi/wagTailFrames            
-            tailRotation = flip * wagTailAmplitude * math.sin(wagTailSpeed * teta) 
-                    
-            if tailRotation > 60.0:
-                tailRotation = 60.0
-            cmds.setAttr('RobinCTRL.WagTail', tailRotation)
-            cmds.setKeyframe('RobinCTRL', attribute='WagTail', t=i+j )
-           
+            if (i+j < animationEnd):
+                teta = j*pi/wagTailFrames            
+                tailRotation = flip * wagTailAmplitude * math.sin(wagTailSpeed * teta) 
+                        
+                if tailRotation > 60.0:
+                    tailRotation = 60.0
+                cmds.setAttr('RobinCTRL.WagTail', tailRotation)
+                cmds.setKeyframe('RobinCTRL', attribute='WagTail', t=i+j )
+            else:
+                break
+                           
 #Tail lifting animation
 def createLiftTailAnimation():
     robinCtrl = cmds.select('RobinCTRL', r=True)
+    getAnimationStart()
     getAnimationEnd()
     getLiftTailFrames()
     getLiftTailAmplitude()   
@@ -474,18 +481,21 @@ def createLiftTailAnimation():
             flip = -flip    
         
         for j in range(0, liftTailFrames, 1):
-            teta = j*pi/liftTailFrames            
-            tailRotation = flip * liftTailAmplitude * math.sin(liftTailSpeed * teta) 
-                    
-            if tailRotation > 60.0:
-                tailRotation = 60.0
-            cmds.setAttr('RobinCTRL.LiftTail', tailRotation)
-            cmds.setKeyframe('RobinCTRL', attribute='LiftTail', t=i+j )
-            
+            if (i+j < animationEnd):
+                teta = j*pi/liftTailFrames            
+                tailRotation = flip * liftTailAmplitude * math.sin(liftTailSpeed * teta) 
+                        
+                if tailRotation > 60.0:
+                    tailRotation = 60.0
+                cmds.setAttr('RobinCTRL.LiftTail', tailRotation)
+                cmds.setKeyframe('RobinCTRL', attribute='LiftTail', t=i+j )
+            else:
+                break            
  
 #Head shaking animaion                        
 def createShakeHeadAnimation():
     robinCtrl = cmds.select('RobinCTRL', r=True)
+    getAnimationStart()
     getAnimationEnd()
     getShakeHeadFrames()
     getShakeHeadAmplitude() 
@@ -497,17 +507,21 @@ def createShakeHeadAnimation():
             flip = -flip    
         
         for j in range(0, shakeHeadFrames, 1):
-            teta = j*pi/shakeHeadFrames            
-            headRotation = flip * shakeHeadAmplitude * math.sin(shakeHeadSpeed * teta) 
-                    
-            if headRotation > 90.0:
-                headRotation = 90.0
-            cmds.setAttr('RobinCTRL.ShakeHead', headRotation)
-            cmds.setKeyframe('RobinCTRL', attribute='ShakeHead', t=i+j )
-
+            if (i+j < animationEnd):
+                teta = j*pi/shakeHeadFrames            
+                headRotation = flip * shakeHeadAmplitude * math.sin(shakeHeadSpeed * teta) 
+                        
+                if headRotation > 90.0:
+                    headRotation = 90.0
+                cmds.setAttr('RobinCTRL.ShakeHead', headRotation)
+                cmds.setKeyframe('RobinCTRL', attribute='ShakeHead', t=i+j )
+            else:
+                break
+                
 #Head nodding animation
 def createNodHeadAnimation():
     robinCtrl = cmds.select('RobinCTRL', r=True)
+    getAnimationStart()
     getAnimationEnd()
     getNodHeadFrames()
     getNodHeadAmplitude()  
@@ -519,20 +533,23 @@ def createNodHeadAnimation():
             flip = -flip    
         
         for j in range(0, nodHeadFrames, 1):
-            teta = j*pi/nodHeadFrames            
-            headRotation = flip * nodHeadAmplitude * math.sin(nodHeadSpeed * teta) 
-                    
-            if headRotation > 90.0:
-                headRotation = 90.0
-            cmds.setAttr('RobinCTRL.NodHead', headRotation)
-            cmds.setKeyframe('RobinCTRL', attribute='NodHead', t=i+j )  
+            if (i+j < animationEnd):
+                teta = j*pi/nodHeadFrames            
+                headRotation = flip * nodHeadAmplitude * math.sin(nodHeadSpeed * teta) 
+                        
+                if headRotation > 90.0:
+                    headRotation = 90.0
+                cmds.setAttr('RobinCTRL.NodHead', headRotation)
+                cmds.setKeyframe('RobinCTRL', attribute='NodHead', t=i+j )  
+            else:
+                break
            
   
 #Reset Robin animation --------------------------------------------------------------------
 
 #Get max frames
 def getMaxFrame():
-    maxFrame = cmds.playbackOptions( max = True, query = True )
+    maxFrame = cmds.playbackOptions( max = True, query = True ) + 1
     return maxFrame 
 
 #Clearing
@@ -622,7 +639,7 @@ def resetLiftWings(maxFrame):
             
 def resetRobin():
     #Get max frames
-    maxFrame = cmds.playbackOptions( max = True, query = True )
+    maxFrame = getMaxFrame()
 
     #Select robin controller
     cmds.select( 'RobinCTRL', r=True )
