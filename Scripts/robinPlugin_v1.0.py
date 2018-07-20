@@ -15,7 +15,7 @@ mirrorShakeHead = True
 mirrorNodHead = True
 mirrorWagTail = True
 mirrorLiftTail = True
-mirrorBendTorso = False
+mirrorBendTorso = True
 
 pi = math.pi
 animationStart = 1
@@ -61,7 +61,7 @@ def createUI():
         cmds.deleteUI('robinWindow')
         
     #Create window 
-    widgets['window'] = cmds.window('robinWindow', t='Robin Animator', w = 400, sizeable = False, mxb = False, mnb = False)
+    widgets['window'] = cmds.window('robinWindow', t='Robin Animator', w = 300, sizeable = False, mxb = False, mnb = False)
     windowLayout = cmds.columnLayout(adj = True, rowSpacing = rowSpacingNumber)
  
     #Create image logo
@@ -81,90 +81,107 @@ def createUI():
     widgets['tabLayout'] = cmds.tabLayout(imw = 5, imh = 5)
     
     #Feet tab --------------------------------------------------------------------------------
-    widgets['feetTab'] = cmds.columnLayout('Feet', parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)    
+    widgets['feetTab'] = cmds.columnLayout('Feet', parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber, co = ('left', 20))    
+    cmds.separator()
     cmds.text('How many frames per hop?');
     widgets['hopFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Hop Frames')
     cmds.text('How high should the robin hop?');
     widgets['hopAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Hop Amplitude')
     cmds.text('How fast should the robin hop?');
     widgets['hopSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Hop Speed')   
+    
     cmds.rowLayout( numberOfColumns = 2 )     
     cmds.button( label='Hop', c = 'createRobinHopInADirectionAnimation()', w = 100, align = 'left')
     cmds.button( label='Clear Hop', c = 'clearRobinHopInADirectionAnimation()', w = 100, align = 'right')
 
         
     #Torso tab --------------------------------------------------------------------------------
-    widgets['torsoTab'] = cmds.columnLayout('Torso', parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)
+    widgets['torsoTab'] = cmds.columnLayout('Torso', parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber, co = ('left', 20))
+    cmds.separator()
     cmds.text('How many frames per bending motion?');
     widgets['torsoBendFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Torso Bending Frames')
     cmds.text('How much should the torso bend?');
     widgets['torsoBendAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Torso Bending Amplitude')
     cmds.text('How fast should the torso bend?');
-    widgets['torsoBendSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Torso Bending Speed') 
+    widgets['bendTorsoSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Bend Torso Speed')  
+    
     cmds.rowLayout( numberOfColumns = 2 ) 
     cmds.button( label='Bend Torso', c = 'createBendTorsoAnimation()', w = 100, align = 'left')
     cmds.button( label='Clear Bend Torso', c = 'clearBendTorsoAnimation()', w = 100, align = 'right')
     
     
     #Wings tab----------------------------------------------------------------------------------
-    widgets['wingsTab'] = cmds.columnLayout('Wings', parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)
+    widgets['wingsTab'] = cmds.columnLayout('Wings', parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber, co = ('left', 20))
+    cmds.separator()
     cmds.text('How many frames per wing flap?');
     widgets['flapWingsFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Frames')
     cmds.text('How high should the wings go?');
     widgets['flapWingsAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Amplitude')
     cmds.text('How fast should the wings flap?');
     widgets['flapWingsSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Flap Wings Speed')  
+   
     cmds.rowLayout( numberOfColumns = 2 ) 
     cmds.button( label='Flap Wings', c = 'createFlapWingsAnimation()', w = 100, align = 'left')
     cmds.button( label='Clear Flap Wings', c = 'clearFlapWingsAnimation()', w = 100, align = 'right') 
        
     #Head tab----------------------------------------------------------------------------------
-    widgets['headTab'] = cmds.columnLayout('Head', w = 400, parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)
+    widgets['headTab'] = cmds.columnLayout('Head', w = 400, parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber, co = ('left', 20))
+    cmds.separator()
     cmds.text('How many frames per head nod?');
     widgets['nodHeadFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Nod Head Frames')
     cmds.text('How much should the head turn?');
     widgets['nodHeadAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Nod Head Amplitude')
     cmds.text('How fast should the head nod?');
-    widgets['nodHeadSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Nod Head Speed') 
+    widgets['nodHeadSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Nod Head Speed')  
+    
+    child1 = cmds.rowColumnLayout(numberOfColumns = 2)
     cmds.button( label = 'Nod Head', c = 'createNodHeadAnimation()', w = 100, align = 'left')
     cmds.button( label = 'Clear Nod Head', c = 'clearNodHeadAnimation()', w = 100, align = 'right')
+    cmds.setParent( '..' )
+    cmds.separator()
     
     cmds.text('How many frames per head shake?');
     widgets['shakeHeadFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Shake Head Frames')
     cmds.text('How much should the head turn?');
     widgets['shakeHeadAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Shake Head Amplitude')
     cmds.text('How fast should the head shake?');
-    widgets['shakeHeadSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Shake Head Speed') 
+    widgets['shakeHeadSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Shake Head Speed')
+    
+    child2 = cmds.rowColumnLayout(numberOfColumns = 2)
     cmds.button( label = 'Shake Head', c = 'createShakeHeadAnimation()', w = 100, align = 'left')
     cmds.button( label = 'Clear Shake Head', c = 'clearShakeHeadAnimation()', w = 100, align = 'right')
+    cmds.setParent( '..' )
+    cmds.separator()  
         
     #Tail tab-----------------------------------------------------------------------------------
-    widgets['tailTab'] = cmds.columnLayout('Tail', w = 400, parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber)   
+    widgets['tailTab'] = cmds.columnLayout('Tail', w = 400, parent = widgets['tabLayout'], rowSpacing = rowSpacingNumber, co = ('left', 20))   
+    cmds.separator()
     cmds.text('How many frames per tail wag?');
     widgets['wagTailFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Wag Tail Frames')
     cmds.text('How high should the tail go?');
     widgets['wagTailAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Wag Tail Amplitude')
     cmds.text('How fast should the tail wag?');
     widgets['wagTailSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Wag Tail Speed')      
+    
+    child1 = cmds.rowColumnLayout(numberOfColumns = 2)
     cmds.button( label = 'Wag Tail', c = 'createWagTailAnimation()', w = 100, align = 'left')
     cmds.button( label = 'Clear Wag Tail', c = 'clearWagTailAnimation()', w = 100, align = 'right')
-        
+    cmds.setParent( '..' )
+    cmds.separator()    
+    
     cmds.text('How many frames per tail lift?');
     widgets['liftTailFrames'] = cmds.intFieldGrp( numberOfFields=1, label='Lift Tail Frames')
     cmds.text('How high should the tail go?');
     widgets['liftTailAmplitude'] = cmds.intFieldGrp( numberOfFields=1, label='Lift Tail Amplitude')
     cmds.text('How fast should the tail lift?');
     widgets['liftTailSpeed'] = cmds.intFieldGrp( numberOfFields=1, label='Lift Tail Speed')   
+    
+    child2 = cmds.rowColumnLayout(numberOfColumns = 2)
     cmds.button( label = 'Lift Tail', c = 'createLiftTailAnimation()', w = 100, align = 'left')
     cmds.button( label = 'Clear Lift Tail', c = 'clearLiftTailAnimation()', w = 100, align = 'right')    
+    cmds.setParent( '..' )
+    cmds.separator()  
     
-    #Animation sequence tab------------------------------------------------------------------------
-    widgets['sequenceTab'] = cmds.columnLayout('Sequence', w = 400, parent = widgets['tabLayout'])    
-    cmds.rowLayout( numberOfColumns = 2 )  
-    cmds.button( label='Create Sequence', c = 'createSequenceAnimation()', w = 100, align = 'left')
-    cmds.button( label='Clear Sequence', c = 'clearSequenceAnimation()', w = 100, align = 'right')
-    
-
     #Show button   
     cmds.showWindow(widgets['window'])
     
@@ -216,12 +233,12 @@ def getTorsoBendAmplitude():
         global torsoBendAmplitude
         torsoBendAmplitude = localTorsoBendAmplitude[0]
                  
-def getTorsoBendSpeed():
-    localTorsoBendSpeed = cmds.intFieldGrp(widgets['torsoBendSpeed'], q = True, v = True)
-    if localTorsoBendSpeed > 0:
-        global torsoBendSpeed
-        torsoBendSpeed = localTorsoBendSpeed[0]
-        
+def getBendTorsoSpeed():
+    localBendTorsoSpeed = cmds.intFieldGrp(widgets['bendTorsoSpeed'], q = True, v = True)
+    if localBendTorsoSpeed > 0:
+        global bendTorsoSpeed
+        bendTorsoSpeed = localBendTorsoSpeed[0]
+                
 #Flap wings methods    
 def getFlapWingsFrames():
     localFlapWingsFrames = cmds.intFieldGrp(widgets['flapWingsFrames'], q = True, v = True)
@@ -240,8 +257,7 @@ def getFlapWingsSpeed():
     if localFlapWingsSpeed > 0:
         global flapWingsSpeed
         flapWingsSpeed = localFlapWingsSpeed[0]
-        flapWingsSpeed = flapWingsSpeed / 10.0
-
+        
 #Nod head methods    
 def getNodHeadFrames():
     localNodHeadFrames = cmds.intFieldGrp(widgets['nodHeadFrames'], q = True, v = True)
@@ -318,29 +334,8 @@ def getLiftTailSpeed():
         global liftTailSpeed
         liftTailSpeed = localLiftTailSpeed[0]
  
-#Animations ---------------------------------------------------------------------------------                        
-#Sequence animation methods      
-def createAnimationSequence():
-    animationTypes = random.sample(xrange(5), 5)
-    animationTimes = random.sample(xrange(50), 5)
-    print animationTypes
-    print animationTimes
-    
-    for a in range(0, 5):
-        global animationEnd
-        animationEnd = animationEnd + animationTimes[a]
-        if animationTypes[a] <= 2:
-            #hopping 
-            print 'Here 1'
-            createRobinHopInADirectionAnimation()
-        elif animationTypes[a] > 2:
-            #flapping wings 
-            createFlapWingsAnimation()
-            print 'Here 2'
-        global animationStart
-        animationStart = animationEnd               
+#Animations ---------------------------------------------------------------------------------                                  
                             
-
 #Hopping animation            
 def createRobinHopInADirectionAnimation():
     #Select robin controler
@@ -388,8 +383,8 @@ def createBendTorsoAnimation():
     getAnimationStart()
     getAnimationEnd()
     getTorsoBendFrames()
-    getTorsoBendAmplitude()   
-    getTorsoBendSpeed()
+    getTorsoBendAmplitude()  
+    getBendTorsoSpeed() 
     flip = 1
     
     #Animate the bend    
@@ -400,7 +395,7 @@ def createBendTorsoAnimation():
         for j in range(0, torsoBendFrames, 1):
             if (i+j < animationEnd):
                 teta = j*pi/torsoBendFrames
-                torsoRotation = flip * torsoBendAmplitude * math.sin(torsoBendSpeed * teta) 
+                torsoRotation = flip * torsoBendAmplitude * math.sin(bendTorsoSpeed * teta) 
         
                 if torsoRotation < -30:
                     torsoRotation = -30
@@ -425,13 +420,14 @@ def createFlapWingsAnimation():
     getFlapWingsFrames()
     getFlapWingsAmplitude()   
     getFlapWingsSpeed()
+    flip=1
     
     for i in range(animationStart, animationEnd, flapWingsFrames):
         for j in range(0, flapWingsFrames, 1):
             if (i+j < animationEnd):
                 teta = j*pi/flapWingsFrames
-                rightWingRotation = flapWingsAmplitude * math.sin(flapWingsSpeed * teta) 
-                leftWingRotation = -flapWingsAmplitude * math.sin(flapWingsSpeed * teta)
+                rightWingRotation = flip * flapWingsAmplitude * math.sin(flapWingsSpeed * teta) 
+                leftWingRotation = -flip * flapWingsAmplitude * math.sin(flapWingsSpeed * teta)
             
                 cmds.setAttr('RobinCTRL.LiftRightWing', rightWingRotation)
                 cmds.setKeyframe( 'RobinCTRL', attribute='LiftRightWing', t=i+j )
